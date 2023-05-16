@@ -11,9 +11,12 @@ typedef unsigned long long ulonglong;
 typedef long long longlong;
 #endif /*__WIN__*/
 #else
+#include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
-#include <my_global.h>
-#include <my_sys.h>
+#include <unistd.h>
+//#include <my_global.h>
+//#include <my_sys.h>
 #endif
 #include <mysql.h>
 #include <ctype.h>
@@ -31,6 +34,7 @@ typedef long long longlong;
 #define SERVER_ADDRESS "127.0.0.1"
 #endif
 
+#define PACKET_SIZE 512
 // static pthread_mutex_t LOCK_hostname;
 // static int _server = -1;
 
@@ -99,15 +103,15 @@ void MySQLNotification_deinit(UDF_INIT *initid) {
     }
 }
 
-longlong MySQLNotification(UDF_INIT *initid,
+long long MySQLNotification(UDF_INIT *initid,
                            UDF_ARGS *args,
                            char *is_null,
                            char *error) {
-    char packet[512];
+    char packet[PACKET_SIZE];
     int* server = (int*)initid->ptr;
-
+    memset(packet, 0, PACKET_SIZE);
     // format a message containing id of row and type of change
-    sprintf(packet, "{\"id\":\"%lld\", \"type\":\"%lld\"}", *((longlong*)args->args[0]), *((longlong*)args->args[1]));
+    sprintf(packet, "{\"id\":\"%lld\", \"type\":\"%lld\"}", *((long long*)args->args[0]), *((long long*)args->args[1]));
 
     if (server && *server != -1) {
         send(*server, packet, strlen(packet), 0);
